@@ -48,6 +48,19 @@ export default class KomgaSeriesService {
     }
   }
 
+  async getOneRandomSeries(): Promise<SeriesDto | null> {
+    try {
+      const res = await this.http.get(`${API_SERIES}/random?limit=1`)
+      return res.data.length > 0 ? res.data[0] : null
+    } catch (e) {
+      let msg = 'An error occurred while trying to retrieve a random series'
+      if (e.response.data.message) {
+        msg += `: ${e.response.data.message}`
+      }
+      throw new Error(msg)
+    }
+  }
+
   async getAlphabeticalGroups(libraryId?: string, search?: string, status?: string[],
                               readStatus?: string[], genre?: string[], tag?: string[], language?: string[],
                               publisher?: string[], ageRating?: string[], releaseDate?: string[], authors?: AuthorDto[],
@@ -141,6 +154,19 @@ export default class KomgaSeriesService {
       })).data
     } catch (e) {
       let msg = 'An error occurred while trying to retrieve books'
+      if (e.response.data.message) {
+        msg += `: ${e.response.data.message}`
+      }
+      throw new Error(msg)
+    }
+  }
+
+  async getOneRandomBook(seriesId: string): Promise<BookDto | null> {
+    try {
+      const res = await this.http.get(`${API_SERIES}/${seriesId}/books/random?limit=1`)
+      return res.data.length > 0 ? res.data[0] : null
+    } catch (e) {
+      let msg = 'An error occurred while trying to retrieve a random book'
       if (e.response.data.message) {
         msg += `: ${e.response.data.message}`
       }
