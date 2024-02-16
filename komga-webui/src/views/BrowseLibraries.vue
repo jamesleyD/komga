@@ -18,6 +18,14 @@
 
       <v-spacer/>
 
+      <v-btn
+        v-if="libraryId === LIBRARIES_ALL"
+        icon
+        @click="gotoRandomSeries"
+      >
+        <v-icon>mdi-shuffle-variant</v-icon>
+      </v-btn>
+
       <page-size-select v-model="pageSize"/>
 
       <v-btn icon @click="drawer = !drawer">
@@ -205,6 +213,7 @@ export default Vue.extend({
         releaseDate: [] as NameValue[],
         sharingLabel: [] as NameValue[],
       },
+      LIBRARIES_ALL,
     }
   },
   props: {
@@ -603,6 +612,12 @@ export default Vue.extend({
     },
     deleteSeries() {
       this.$store.dispatch('dialogDeleteSeries', this.selectedSeries)
+    },
+    async gotoRandomSeries() {
+      const series = await this.$komgaSeries.getOneRandomSeries()
+      if (series) {
+        this.$router.push({name:'browse-series', params: {seriesId: series.id}})
+      }
     },
   },
 })

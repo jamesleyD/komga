@@ -31,6 +31,13 @@
         <v-icon>mdi-pencil</v-icon>
       </v-btn>
 
+      <v-btn
+        icon
+        @click="gotoRandomBook"
+      >
+        <v-icon>mdi-shuffle-variant</v-icon>
+      </v-btn>
+
       <page-size-select v-model="pageSize"/>
 
       <v-btn icon @click="drawer = !drawer">
@@ -936,6 +943,12 @@ export default Vue.extend({
     },
     deleteBooks() {
       this.$store.dispatch('dialogDeleteBook', this.selectedBooks)
+    },
+    async gotoRandomBook() {
+      const book = await this.$komgaSeries.getOneRandomBook(this.seriesId)
+      if (book) {
+        this.$router.push({name:'browse-book', params: {bookId: book.id}})
+      }
     },
   },
 })
