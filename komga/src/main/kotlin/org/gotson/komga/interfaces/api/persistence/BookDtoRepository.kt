@@ -69,4 +69,11 @@ interface BookDtoRepository {
     userId: String,
     pageable: Pageable,
   ): Page<BookDto>
+
+  fun findRandomBookInSeries(
+    seriesId: String,
+    userId: String,
+    limit: Int,
+    restrictions: ContentRestrictions = ContentRestrictions(),
+    ): Collection<BookDto>
 }

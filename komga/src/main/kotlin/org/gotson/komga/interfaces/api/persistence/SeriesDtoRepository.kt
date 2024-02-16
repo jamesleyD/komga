@@ -35,9 +35,16 @@ interface SeriesDtoRepository {
     pageable: Pageable,
   ): Page<SeriesDto>
 
+  fun findRandomSeries(
+    userId: String,
+    limit: Int,
+    restrictions: ContentRestrictions = ContentRestrictions(),
+  ): Collection<SeriesDto>
+
   fun countByFirstCharacter(
     search: SeriesSearchWithReadProgress,
     userId: String,
     restrictions: ContentRestrictions,
   ): List<GroupCountDto>
+
 }

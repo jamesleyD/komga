@@ -199,6 +199,20 @@ class SeriesController(
       .map { it.restrictUrl(!principal.user.roleAdmin) }
   }
 
+  @GetMapping("v1/series/random")
+  fun getRandomSeries(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @RequestParam(name = "limit", required = false, defaultValue = "5") limit: Int,
+  ): Collection<SeriesDto> {
+    checkLimitExceed(limit)
+
+    return seriesDtoRepository.findRandomSeries(
+      principal.user.id,
+      limit,
+      principal.user.restrictions,
+    ).map { it.restrictUrl(!principal.user.roleAdmin) }
+  }
+
   @AuthorsAsQueryParam
   @Parameters(
     Parameter(
@@ -518,6 +532,22 @@ class SeriesController(
     ).map { it.restrictUrl(!principal.user.roleAdmin) }
   }
 
+  @GetMapping("v1/series/{seriesId}/books/random")
+  fun getRandomBooksBySeries(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @PathVariable(name = "seriesId") seriesId: String,
+    @RequestParam(name = "limit", required = false, defaultValue = "5") limit: Int,
+    ): Collection<BookDto> {
+    principal.user.checkContentRestriction(seriesId)
+    checkLimitExceed(limit)
+
+    return bookDtoRepository.findRandomBookInSeries(
+      seriesId,
+      principal.user.id,
+      limit,
+    ).map { it.restrictUrl(!principal.user.roleAdmin) }
+  }
+
   @GetMapping("v1/series/{seriesId}/collections")
   fun getAllCollectionsBySeries(
     @AuthenticationPrincipal principal: KomgaPrincipal,
@@ -753,5 +783,15 @@ class SeriesController(
       seriesMetadataRepository.findById(seriesId).let {
         if (!isContentAllowed(it.ageRating, it.sharingLabels)) throw ResponseStatusException(HttpStatus.FORBIDDEN)
       }
+  }
+
+  /**
+   * Checks if the limit is not too high for performance reasons
+   *
+   * @throws[ResponseStatusException] if the limit does not comply with the maximum limit
+   */
+  private fun checkLimitExceed(limit: Int) {
+    val maxLimit = 20
+    if (limit > maxLimit) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Limit must not exceed $maxLimit")
   }
 }

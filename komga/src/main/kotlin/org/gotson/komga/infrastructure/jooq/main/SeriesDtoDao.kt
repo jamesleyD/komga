@@ -37,6 +37,7 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.lower
+import org.jooq.impl.DSL.rand
 import org.jooq.impl.DSL.substring
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
@@ -195,6 +196,17 @@ class SeriesDtoDao(
       .apply { if (joinConditions.collection) leftJoin(cs).on(s.ID.eq(cs.SERIES_ID)) }
       .apply { if (joinConditions.aggregationAuthor) leftJoin(bmaa).on(s.ID.eq(bmaa.SERIES_ID)) }
       .apply { if (joinConditions.sharingLabel) leftJoin(sl).on(s.ID.eq(sl.SERIES_ID)) }
+
+  override fun findRandomSeries(
+    userId: String,
+    limit: Int,
+    restrictions: ContentRestrictions,
+  ): Collection<SeriesDto> {
+      return selectBase(userId, JoinConditions())
+        .orderBy(rand())
+        .limit(limit)
+        .fetchAndMap()
+  }
 
   private fun findAll(
     conditions: Condition,

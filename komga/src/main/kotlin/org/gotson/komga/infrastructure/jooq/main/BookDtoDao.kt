@@ -5,6 +5,7 @@ import org.gotson.komga.domain.model.ContentRestrictions
 import org.gotson.komga.domain.model.ReadList
 import org.gotson.komga.domain.model.ReadStatus
 import org.gotson.komga.infrastructure.datasource.SqliteUdfDataSource
+import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.jooq.insertTempStrings
 import org.gotson.komga.infrastructure.jooq.noCase
 import org.gotson.komga.infrastructure.jooq.selectTempStrings
@@ -36,6 +37,7 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DSL.falseCondition
 import org.jooq.impl.DSL.inline
 import org.jooq.impl.DSL.noCondition
+import org.jooq.impl.DSL.rand
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -113,6 +115,21 @@ class BookDtoDao(
     val conditions = rlb.READLIST_ID.eq(readListId).and(search.toCondition()).and(restrictions.toCondition(dsl))
 
     return findAll(conditions, userId, pageable, true, filterOnLibraryIds, search.searchTerm)
+  }
+
+  override fun findRandomBookInSeries(
+    seriesId: String,
+    userId: String,
+    limit: Int,
+    restrictions: ContentRestrictions,
+  ): Collection<BookDto> {
+
+    return selectBase(userId, false)
+        .and(b.SERIES_ID.equal(seriesId))
+        .and(restrictions.toCondition(dsl))
+        .orderBy(rand())
+        .limit(limit)
+        .fetchAndMap()
   }
 
   private fun findAll(
