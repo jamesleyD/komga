@@ -115,6 +115,10 @@ class SeriesController(
   private val imageAnalyzer: ImageAnalyzer,
   private val thumbnailsSeriesRepository: ThumbnailSeriesRepository,
 ) {
+  companion object {
+    const val RANDOM_QUERY_MAX_LIMIT = 20
+  }
+
   @PageableAsQueryParam
   @AuthorsAsQueryParam
   @Parameters(
@@ -199,6 +203,15 @@ class SeriesController(
       .map { it.restrictUrl(!principal.user.roleAdmin) }
   }
 
+  @Operation(description = "Return random series")
+  @Parameters(
+    Parameter(
+      description = "Specify the number of records to return",
+      `in` = ParameterIn.QUERY,
+      name = "limit",
+      schema = Schema(type = "integer", maximum = RANDOM_QUERY_MAX_LIMIT.toString()),
+    ),
+  )
   @GetMapping("v1/series/random")
   fun getRandomSeries(
     @AuthenticationPrincipal principal: KomgaPrincipal,
@@ -532,6 +545,15 @@ class SeriesController(
     ).map { it.restrictUrl(!principal.user.roleAdmin) }
   }
 
+  @Operation(description = "Return random books in a series")
+  @Parameters(
+    Parameter(
+      description = "Specify the number of records to return",
+      `in` = ParameterIn.QUERY,
+      name = "limit",
+      schema = Schema(type = "integer", maximum = RANDOM_QUERY_MAX_LIMIT.toString()),
+    ),
+  )
   @GetMapping("v1/series/{seriesId}/books/random")
   fun getRandomBooksBySeries(
     @AuthenticationPrincipal principal: KomgaPrincipal,
@@ -791,7 +813,6 @@ class SeriesController(
    * @throws[ResponseStatusException] if the limit does not comply with the maximum limit
    */
   private fun checkLimitExceed(limit: Int) {
-    val maxLimit = 20
-    if (limit > maxLimit) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Limit must not exceed $maxLimit")
+    if (limit > RANDOM_QUERY_MAX_LIMIT) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Limit must not exceed $RANDOM_QUERY_MAX_LIMIT")
   }
 }
