@@ -122,7 +122,7 @@ class BookDtoDao(
     limit: Int,
     restrictions: ContentRestrictions,
   ): Collection<BookDto> {
-    return selectBase(userId, false).and(b.SERIES_ID.equal(seriesId))
+    return selectBase(userId, false).where(b.SERIES_ID.equal(seriesId))
       .and(restrictions.toCondition(dsl))
       .orderBy(rand())
       .limit(limit)
