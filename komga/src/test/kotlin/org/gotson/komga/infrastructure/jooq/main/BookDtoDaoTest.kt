@@ -914,6 +914,26 @@ class BookDtoDaoTest(
   @Nested
   inner class RandomBooks {
     @Test
+    fun `given series with books when randomly searching for books in a series then only the books in the series are returned`() {
+      // given
+      val books: MutableList<Book> = mutableListOf()
+      val series2 = seriesLifecycle.createSeries(makeSeries(name = "series2", libraryId = library.id))
+
+      (1..2).forEach { books.add(makeBook("Book-series1 $it", seriesId = series.id, libraryId = library.id)) }
+      seriesLifecycle.addBooks(series, books)
+      books.clear()
+      (1..2).forEach { books.add(makeBook("Book-series2 $it", seriesId = series2.id, libraryId = library.id)) }
+      seriesLifecycle.addBooks(series2, books)
+
+      // when
+      val found = bookDtoDao.findRandomBookInSeries(series2.id, user.id, 10)
+
+      // then
+      assertThat(found).hasSize(2)
+      assertThat(found.map { it.seriesId }).allMatch { it.equals(series2.id) }
+    }
+
+    @Test
     fun `given a series with 10 books when randomly searching for books in the series with a limit of 5 then exactly 5 results are returned`() {
       // given
       val limit = 5
