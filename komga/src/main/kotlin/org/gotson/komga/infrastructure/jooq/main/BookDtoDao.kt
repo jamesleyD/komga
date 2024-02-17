@@ -5,7 +5,6 @@ import org.gotson.komga.domain.model.ContentRestrictions
 import org.gotson.komga.domain.model.ReadList
 import org.gotson.komga.domain.model.ReadStatus
 import org.gotson.komga.infrastructure.datasource.SqliteUdfDataSource
-import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.jooq.insertTempStrings
 import org.gotson.komga.infrastructure.jooq.noCase
 import org.gotson.komga.infrastructure.jooq.selectTempStrings
@@ -123,13 +122,11 @@ class BookDtoDao(
     limit: Int,
     restrictions: ContentRestrictions,
   ): Collection<BookDto> {
-
-    return selectBase(userId, false)
-        .and(b.SERIES_ID.equal(seriesId))
-        .and(restrictions.toCondition(dsl))
-        .orderBy(rand())
-        .limit(limit)
-        .fetchAndMap()
+    return selectBase(userId, false).and(b.SERIES_ID.equal(seriesId))
+      .and(restrictions.toCondition(dsl))
+      .orderBy(rand())
+      .limit(limit)
+      .fetchAndMap()
   }
 
   private fun findAll(

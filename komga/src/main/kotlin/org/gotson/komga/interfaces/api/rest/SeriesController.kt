@@ -117,6 +117,7 @@ class SeriesController(
 ) {
   companion object {
     const val RANDOM_QUERY_MAX_LIMIT = 20
+    const val RANDOM_QUERY_DEFAULT_LIMIT = 5
   }
 
   @PageableAsQueryParam
@@ -209,13 +210,18 @@ class SeriesController(
       description = "Specify the number of records to return",
       `in` = ParameterIn.QUERY,
       name = "limit",
-      schema = Schema(type = "integer", maximum = RANDOM_QUERY_MAX_LIMIT.toString()),
+      schema =
+        Schema(
+          type = "integer",
+          maximum = "$RANDOM_QUERY_MAX_LIMIT",
+          defaultValue = "$RANDOM_QUERY_DEFAULT_LIMIT",
+        ),
     ),
   )
   @GetMapping("v1/series/random")
   fun getRandomSeries(
     @AuthenticationPrincipal principal: KomgaPrincipal,
-    @RequestParam(name = "limit", required = false, defaultValue = "5") limit: Int,
+    @RequestParam(name = "limit", required = false, defaultValue = "$RANDOM_QUERY_DEFAULT_LIMIT") limit: Int,
   ): Collection<SeriesDto> {
     checkLimitExceed(limit)
 
@@ -551,15 +557,20 @@ class SeriesController(
       description = "Specify the number of records to return",
       `in` = ParameterIn.QUERY,
       name = "limit",
-      schema = Schema(type = "integer", maximum = RANDOM_QUERY_MAX_LIMIT.toString()),
+      schema =
+        Schema(
+          type = "integer",
+          maximum = "$RANDOM_QUERY_MAX_LIMIT",
+          defaultValue = "$RANDOM_QUERY_DEFAULT_LIMIT",
+        ),
     ),
   )
   @GetMapping("v1/series/{seriesId}/books/random")
   fun getRandomBooksBySeries(
     @AuthenticationPrincipal principal: KomgaPrincipal,
     @PathVariable(name = "seriesId") seriesId: String,
-    @RequestParam(name = "limit", required = false, defaultValue = "5") limit: Int,
-    ): Collection<BookDto> {
+    @RequestParam(name = "limit", required = false, defaultValue = "$RANDOM_QUERY_DEFAULT_LIMIT") limit: Int,
+  ): Collection<BookDto> {
     principal.user.checkContentRestriction(seriesId)
     checkLimitExceed(limit)
 

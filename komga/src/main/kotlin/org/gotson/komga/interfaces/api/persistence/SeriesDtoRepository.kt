@@ -46,5 +46,4 @@ interface SeriesDtoRepository {
     userId: String,
     restrictions: ContentRestrictions,
   ): List<GroupCountDto>
-
 }

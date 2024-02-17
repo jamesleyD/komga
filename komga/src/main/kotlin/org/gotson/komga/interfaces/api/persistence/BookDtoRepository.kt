@@ -75,5 +75,5 @@ interface BookDtoRepository {
     userId: String,
     limit: Int,
     restrictions: ContentRestrictions = ContentRestrictions(),
-    ): Collection<BookDto>
+  ): Collection<BookDto>
 }

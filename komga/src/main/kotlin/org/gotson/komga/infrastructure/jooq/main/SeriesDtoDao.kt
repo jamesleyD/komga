@@ -202,10 +202,10 @@ class SeriesDtoDao(
     limit: Int,
     restrictions: ContentRestrictions,
   ): Collection<SeriesDto> {
-      return selectBase(userId, JoinConditions())
-        .orderBy(rand())
-        .limit(limit)
-        .fetchAndMap()
+    return selectBase(userId, JoinConditions())
+      .orderBy(rand())
+      .limit(limit)
+      .fetchAndMap()
   }
 
   private fun findAll(
