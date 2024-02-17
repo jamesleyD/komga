@@ -706,4 +706,33 @@ class SeriesDtoDaoTest(
       assertThat(found.map { it.metadata.title }).containsExactly("Batman")
     }
   }
+
+  @Nested
+  inner class RandomSeries {
+    @Test
+    fun `given 10 series when randomly searching for series with a limit of 5 then exactly 5 results are returned`() {
+      // given
+      val limit = 5
+      (1..10).forEach { seriesLifecycle.createSeries(makeSeries("Series $it", library.id)) }
+
+      // when
+      val found = seriesDtoDao.findRandomSeries(user.id, limit)
+
+      // then
+      assertThat(found).hasSize(limit)
+    }
+
+    @Test
+    fun `given 5 series when randomly searching for series with a limit of 10 then exactly 5 results are returned`() {
+      // given
+      val limit = 10
+      (1..5).forEach { seriesLifecycle.createSeries(makeSeries("Series $it", library.id)) }
+
+      // when
+      val found = seriesDtoDao.findRandomSeries(user.id, limit)
+
+      // then
+      assertThat(found).hasSize(5)
+    }
+  }
 }

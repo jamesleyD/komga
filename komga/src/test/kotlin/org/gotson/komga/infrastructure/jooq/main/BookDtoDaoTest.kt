@@ -7,6 +7,7 @@ import io.mockk.just
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.gotson.komga.domain.model.Author
+import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.BookSearchWithReadProgress
 import org.gotson.komga.domain.model.KomgaUser
 import org.gotson.komga.domain.model.Media
@@ -907,6 +908,39 @@ class BookDtoDaoTest(
 
       // then
       assertThat(found).isEmpty()
+    }
+  }
+
+  @Nested
+  inner class RandomBooks {
+    @Test
+    fun `given a series with 10 books when randomly searching for books in the series with a limit of 5 then exactly 5 results are returned`() {
+      // given
+      val limit = 5
+      val books: MutableList<Book> = mutableListOf()
+      (1..10).forEach { books.add(makeBook("Book $it", seriesId = series.id, libraryId = library.id)) }
+      seriesLifecycle.addBooks(series, books)
+
+      // when
+      val found = bookDtoDao.findRandomBookInSeries(series.id, user.id, limit)
+
+      // then
+      assertThat(found).hasSize(limit)
+    }
+
+    @Test
+    fun `given a series with 5 books when randomly searching for books in the series with a limit of 10 then exactly 5 results are returned`() {
+      // given
+      val limit = 10
+      val books: MutableList<Book> = mutableListOf()
+      (1..5).forEach { books.add(makeBook("Book $it", seriesId = series.id, libraryId = library.id)) }
+      seriesLifecycle.addBooks(series, books)
+
+      // when
+      val found = bookDtoDao.findRandomBookInSeries(series.id, user.id, limit)
+
+      // then
+      assertThat(found).hasSize(5)
     }
   }
 }

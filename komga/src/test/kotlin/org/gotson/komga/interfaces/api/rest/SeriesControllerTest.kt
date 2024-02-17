@@ -3,6 +3,7 @@ package org.gotson.komga.interfaces.api.rest
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.BookPage
 import org.gotson.komga.domain.model.Dimension
 import org.gotson.komga.domain.model.KomgaUser
@@ -1179,6 +1180,72 @@ class SeriesControllerTest(
         .andExpect {
           status { isOk() }
           jsonPath("$.content") { isEmpty() }
+        }
+    }
+  }
+
+  @Nested
+  inner class RandomSeriesAndBooks {
+    @Test
+    @WithMockCustomUser
+    fun `given series when randomly getting series without a limit then the default limit is used`() {
+      (1..SeriesController.RANDOM_QUERY_DEFAULT_LIMIT + 1).forEach { seriesLifecycle.createSeries(makeSeries("Series $it", library.id)) }
+
+      mockMvc.get("/api/v1/series/random")
+        .andExpect {
+          status { isOk() }
+        }
+        .andExpect {
+          jsonPath("$.length()") { value(SeriesController.RANDOM_QUERY_DEFAULT_LIMIT) }
+        }
+    }
+
+    @Test
+    @WithMockCustomUser
+    fun `given books and series when randomly getting books in series without a limit then the default limit is used`() {
+      val series =
+        makeSeries(name = "series", libraryId = library.id).let { series ->
+          seriesLifecycle.createSeries(series).also { created ->
+            val books: MutableList<Book> = mutableListOf()
+            (1..SeriesController.RANDOM_QUERY_DEFAULT_LIMIT + 1).forEach { books.add(makeBook("Book $it", seriesId = created.id, libraryId = library.id)) }
+            seriesLifecycle.addBooks(created, books)
+          }
+        }
+
+      mockMvc.get("/api/v1/series/${series.id}/books/random")
+        .andExpect {
+          status { isOk() }
+        }
+        .andExpect {
+          jsonPath("$.length()") { value(SeriesController.RANDOM_QUERY_DEFAULT_LIMIT) }
+        }
+    }
+
+    @Test
+    @WithMockCustomUser
+    fun `given series when randomly getting series with a limit greater than the maximum limit then return bad request`() {
+      seriesLifecycle.createSeries(makeSeries("Series", library.id))
+      mockMvc.get("/api/v1/series/random?limit=${SeriesController.RANDOM_QUERY_MAX_LIMIT + 1}")
+        .andExpect {
+          status { isBadRequest() }
+        }
+    }
+
+    @Test
+    @WithMockCustomUser
+    fun `given books and series when randomly getting books in series with a limit greater than the maximum limit then return bad request`() {
+      val series =
+        makeSeries(name = "series", libraryId = library.id).let { series ->
+          seriesLifecycle.createSeries(series).also { created ->
+            val books: MutableList<Book> = mutableListOf()
+            (1..SeriesController.RANDOM_QUERY_DEFAULT_LIMIT + 1).forEach { books.add(makeBook("Book $it", seriesId = created.id, libraryId = library.id)) }
+            seriesLifecycle.addBooks(created, books)
+          }
+        }
+
+      mockMvc.get("/api/v1/series/${series.id}/books/random?limit=${SeriesController.RANDOM_QUERY_MAX_LIMIT + 1}")
+        .andExpect {
+          status { isBadRequest() }
         }
     }
   }
