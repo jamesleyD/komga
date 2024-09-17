@@ -10,6 +10,7 @@ const val ROLE_USER = "USER"
 const val ROLE_ADMIN = "ADMIN"
 const val ROLE_FILE_DOWNLOAD = "FILE_DOWNLOAD"
 const val ROLE_PAGE_STREAMING = "PAGE_STREAMING"
+const val ROLE_KOBO_SYNC = "KOBO_SYNC"
 
 data class KomgaUser(
   @Email(regexp = ".+@.+\\..+")
@@ -20,6 +21,7 @@ data class KomgaUser(
   val roleAdmin: Boolean,
   val roleFileDownload: Boolean = true,
   val rolePageStreaming: Boolean = true,
+  val roleKoboSync: Boolean = false,
   val sharedLibrariesIds: Set<String> = emptySet(),
   val sharedAllLibraries: Boolean = true,
   val restrictions: ContentRestrictions = ContentRestrictions(),
@@ -34,6 +36,7 @@ data class KomgaUser(
       if (roleAdmin) add(ROLE_ADMIN)
       if (roleFileDownload) add(ROLE_FILE_DOWNLOAD)
       if (rolePageStreaming) add(ROLE_PAGE_STREAMING)
+      if (roleKoboSync) add(ROLE_KOBO_SYNC)
     }
   }
 
@@ -45,10 +48,10 @@ data class KomgaUser(
   fun getAuthorizedLibraryIds(libraryIds: Collection<String>?): Collection<String>? =
     when {
       // limited user & libraryIds are specified: filter on provided libraries intersecting user's authorized libraries
-      !sharedAllLibraries && libraryIds != null -> libraryIds.intersect(sharedLibrariesIds)
+      !canAccessAllLibraries() && libraryIds != null -> libraryIds.intersect(sharedLibrariesIds)
 
       // limited user: filter on user's authorized libraries
-      !sharedAllLibraries && libraryIds == null -> sharedLibrariesIds
+      !canAccessAllLibraries() && libraryIds == null -> sharedLibrariesIds
 
       // non-limited user & libraryIds are specified: filter on provided libraries
       libraryIds != null -> libraryIds
@@ -57,12 +60,13 @@ data class KomgaUser(
       else -> null
     }
 
-  fun canAccessLibrary(libraryId: String): Boolean =
-    sharedAllLibraries || sharedLibrariesIds.any { it == libraryId }
+  fun canAccessAllLibraries(): Boolean = sharedAllLibraries || roleAdmin
 
-  fun canAccessLibrary(library: Library): Boolean {
-    return sharedAllLibraries || sharedLibrariesIds.any { it == library.id }
-  }
+  fun canAccessLibrary(libraryId: String): Boolean =
+    canAccessAllLibraries() || sharedLibrariesIds.any { it == libraryId }
+
+  fun canAccessLibrary(library: Library): Boolean =
+    canAccessAllLibraries() || sharedLibrariesIds.any { it == library.id }
 
   fun isContentAllowed(
     ageRating: Int? = null,
@@ -106,5 +110,5 @@ data class KomgaUser(
   }
 
   override fun toString(): String =
-    "KomgaUser(email='$email', roleAdmin=$roleAdmin, roleFileDownload=$roleFileDownload, rolePageStreaming=$rolePageStreaming, sharedLibrariesIds=$sharedLibrariesIds, sharedAllLibraries=$sharedAllLibraries, restrictions=$restrictions, id='$id', createdDate=$createdDate, lastModifiedDate=$lastModifiedDate)"
+    "KomgaUser(email='$email', roleAdmin=$roleAdmin, roleFileDownload=$roleFileDownload, rolePageStreaming=$rolePageStreaming, roleKoboSync=$roleKoboSync, sharedLibrariesIds=$sharedLibrariesIds, sharedAllLibraries=$sharedAllLibraries, restrictions=$restrictions, id='$id', createdDate=$createdDate, lastModifiedDate=$lastModifiedDate)"
 }

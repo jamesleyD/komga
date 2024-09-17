@@ -106,6 +106,28 @@
             </v-tooltip>
           </template>
         </v-text-field>
+
+        <v-checkbox
+          v-model="form.koboProxy"
+          @change="$v.form.koboProxy.$touch()"
+          :label="$t('server_settings.label_kobo_proxy')"
+          hide-details
+        />
+
+        <v-text-field
+          v-model="form.koboPort"
+          @input="$v.form.koboPort.$touch()"
+          @blur="$v.form.koboPort.$touch()"
+          :error-messages="koboPortErrors"
+          clearable
+          :label="$t('server_settings.label_kobo_port')"
+          :hint="$t('server_settings.hint_kobo_port')"
+          persistent-hint
+          type="number"
+          min="1"
+          max="65535"
+          class="mt-4"
+        />
       </v-col>
     </v-row>
     <v-row>
@@ -158,6 +180,8 @@ export default Vue.extend({
       taskPoolSize: 1,
       serverPort: 25600,
       serverContextPath: '',
+      koboProxy: false,
+      koboPort: undefined,
     },
     existingSettings: {} as SettingsDto,
     dialogRegenerateThumbnails: false,
@@ -182,6 +206,11 @@ export default Vue.extend({
       },
       serverContextPath: {
         contextPath,
+      },
+      koboProxy: {},
+      koboPort: {
+        minValue: minValue(1),
+        maxValue: maxValue(65535),
       },
     },
   },
@@ -219,6 +248,12 @@ export default Vue.extend({
       const errors = [] as string[]
       if (!this.$v.form?.serverContextPath?.$dirty) return errors
       !this.$v?.form?.serverContextPath?.contextPath && errors.push(this.$t('validation.context_path').toString())
+      return errors
+    },
+    koboPortErrors(): string[] {
+      const errors = [] as string[]
+      if (!this.$v.form?.koboPort?.$dirty) return errors;
+      (!this.$v?.form?.koboPort?.minValue || !this.$v?.form?.koboPort?.maxValue) && errors.push(this.$t('validation.tcp_port').toString())
       return errors
     },
     saveDisabled(): boolean {
@@ -259,6 +294,12 @@ export default Vue.extend({
       if (this.$v.form?.serverContextPath?.$dirty)
         // coerce empty string to null
         this.$_.merge(newSettings, {serverContextPath: this.form.serverContextPath || null})
+
+      if (this.$v.form?.koboProxy?.$dirty)
+        this.$_.merge(newSettings, {koboProxy: this.form.koboProxy})
+      if (this.$v.form?.koboPort?.$dirty)
+        this.$_.merge(newSettings, {koboPort: this.form.koboPort})
+
 
       await this.$komgaSettings.updateSettings(newSettings)
       await this.refreshSettings()

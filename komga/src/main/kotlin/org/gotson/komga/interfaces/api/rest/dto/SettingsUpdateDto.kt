@@ -36,4 +36,13 @@ class SettingsUpdateDto {
     by Delegates.observable(null) { prop, _, _ ->
       isSet[prop.name] = true
     }
+
+  var koboProxy: Boolean? = null
+
+  @get:Positive
+  @get:Max(65535)
+  var koboPort: Int?
+    by Delegates.observable(null) { prop, _, _ ->
+      isSet[prop.name] = true
+    }
 }

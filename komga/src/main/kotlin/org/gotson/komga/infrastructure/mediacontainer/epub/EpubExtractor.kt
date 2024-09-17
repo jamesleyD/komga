@@ -2,18 +2,18 @@ package org.gotson.komga.infrastructure.mediacontainer.epub
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.ArchiveEntry
-import org.apache.commons.compress.archivers.zip.ZipFile
 import org.gotson.komga.domain.model.BookPage
-import org.gotson.komga.domain.model.EntryNotFoundException
 import org.gotson.komga.domain.model.EpubTocEntry
 import org.gotson.komga.domain.model.MediaFile
 import org.gotson.komga.domain.model.R2Locator
 import org.gotson.komga.domain.model.TypedBytes
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
+import org.gotson.komga.infrastructure.util.getZipEntryBytes
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.util.UriUtils
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.invariantSeparatorsPathString
@@ -34,15 +34,11 @@ class EpubExtractor(
   fun getEntryStream(
     path: Path,
     entryName: String,
-  ): ByteArray =
-    ZipFile(path.toFile()).use { zip ->
-      zip.getEntry(entryName)?.let { entry -> zip.getInputStream(entry).use { it.readBytes() } }
-        ?: throw EntryNotFoundException("Entry does not exist: $entryName")
-    }
+  ): ByteArray = getZipEntryBytes(path, entryName)
 
   fun isEpub(path: Path): Boolean =
     try {
-      getEntryStream(path, "mimetype").decodeToString() == "application/epub+zip"
+      getEntryStream(path, "mimetype").decodeToString().trim() == "application/epub+zip"
     } catch (e: Exception) {
       false
     }
@@ -98,7 +94,7 @@ class EpubExtractor(
     val pages =
       spine.map { page ->
         MediaFile(
-          normalizeHref(epub.opfDir, page.href),
+          normalizeHref(epub.opfDir, UriUtils.decode(page.href, Charsets.UTF_8)),
           page.mediaType,
           MediaFile.SubType.EPUB_PAGE,
         )
@@ -107,7 +103,7 @@ class EpubExtractor(
     val assets =
       epub.manifest.values.filterNot { spine.contains(it) }.map {
         MediaFile(
-          normalizeHref(epub.opfDir, it.href),
+          normalizeHref(epub.opfDir, UriUtils.decode(it.href, Charsets.UTF_8)),
           it.mediaType,
           MediaFile.SubType.EPUB_ASSET,
         )

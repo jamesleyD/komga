@@ -28,17 +28,18 @@ import java.util.concurrent.ScheduledFuture
 
 private val logger = KotlinLogging.logger {}
 
+private const val MAX_RESULTS = 1000
+
 @Component
 class LuceneHelper(
   private val directory: Directory,
   private val searchAnalyzer: Analyzer,
   private val taskScheduler: TaskScheduler,
-  indexAnalyzer: Analyzer,
+  private val indexAnalyzer: Analyzer,
   @Value("#{@komgaProperties.lucene.commitDelay}")
   private val commitDelay: Duration,
 ) {
-  private val indexWriterConfig = IndexWriterConfig(indexAnalyzer)
-  private val indexWriter: IndexWriter = IndexWriter(directory, indexWriterConfig)
+  private val indexWriter: IndexWriter = IndexWriter(directory, IndexWriterConfig(indexAnalyzer))
   private val searcherManager = SearcherManager(indexWriter, SearcherFactory())
 
   fun indexExists(): Boolean = DirectoryReader.indexExists(directory)
@@ -79,7 +80,7 @@ class LuceneHelper(
             .build()
 
         val searcher = searcherManager.acquire()
-        val topDocs = searcher.search(booleanQuery, Int.MAX_VALUE)
+        val topDocs = searcher.search(booleanQuery, MAX_RESULTS)
         topDocs.scoreDocs.map { searcher.storedFields().document(it.doc)[entity.id] }
       } catch (e: ParseException) {
         emptyList()
@@ -93,7 +94,7 @@ class LuceneHelper(
   }
 
   fun upgradeIndex() {
-    IndexUpgrader(directory, indexWriterConfig, true).upgrade()
+    IndexUpgrader(directory, IndexWriterConfig(indexAnalyzer), true).upgrade()
     logger.info { "Lucene index upgraded" }
   }
 
